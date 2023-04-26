@@ -1,25 +1,32 @@
-const dbConfig = require("../config/db.config");
-const Sequelize = require("sequelize");
-const database = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
-    host: dbConfig.HOST,
-    dialect: dbConfig.dialect,
-    operatorsAliases: false,
-    pool: {
-        max: dbConfig.pool.max,
-        min: dbConfig.pool.min,
-        acquire: dbConfig.pool.acquire,
-        idle: dbConfig.pool.idle
-    }
+const User = require('./User');
+const Post = require('./Post');
+const Comment = require('./Comment');
+
+User.hasMany(Post, {
+  foreignKey: 'user_id',
+  onDelete: 'CASCADE'
 });
 
-const db = {};
-db.Sequelize = Sequelize;
-db.databaseConf = database;
-// function to drop existing tables and re-sync database
-db.dropRestApiTable = () => {
-    db.databaseConf.sync({ force: true }).then(() => {
-        console.log("restTutorial table just dropped and db re-synced.");
-    });
-};
-db.posts = require("./Sequelize.model")(database, Sequelize);
-module.exports = db;
+Post.belongsTo(User, {
+  foreignKey: 'user_id'
+});
+
+User.hasMany(Comment, {
+  foreignKey: 'user_id',
+  onDelete: 'CASCADE'
+})
+
+Comment.belongsTo(User, {
+  foreignKey: 'user_id'
+});
+
+Post.hasMany(Comment, {
+  foreignKey: 'post_id',
+  onDelete: 'CASCADE'
+});
+
+Comment.belongsTo(Post, {
+  foreignKey: 'post_id'
+});
+
+module.exports = { User, Post, Comment };
