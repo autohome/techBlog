@@ -1,29 +1,46 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-const server = express();
-const db = require("./models");
-const corsSettings = {
-  originL: "http://localhost:8081"
+const path = require('path');
+const express = require('express');
+const session = require('express-session');
+const exphbs = require('express-handlebars');
+const routes = require('./controllers');
+const helpers = require('./utils/helpers');
+
+const sequelize = require('./config/connection');
+const SequelizeStore = require('connect-session-sequelize')(session.Store);
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+// Set up Handlebars.js engine with custom helpers
+const hbs = exphbs.create({ helpers });
+
+const sess = {
+  secret: 'Super secret secret',
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    secure: false,
+    sameSite: 'strict',
+  },
+  resave: false,
+  saveUninitialized: true,
+  store: new SequelizeStore({
+    db: sequelize
+  })
 };
 
-const api = require("./routes/index");
-server.use(cors(corsSettings));
+app.use(session(sess));
 
-// Parse request of content-type - application/json
-server.use(bodyParser.json());
+// Inform Express.js on which template engine to use
+app.engine('handlebars', hbs.engine);
+app.set('view engine', 'handlebars');
 
-// parse requests of content-type -application/x-www-form-urlencoded
-server.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// create a simple route
-server.get("/", (req, res) => {
-   res.json({ message: "Welcome to node.js rest api application. Created for learning purposes by Christos Ploutarchou" });
-});
+app.use(routes);
 
-// set listening ports for request
-const port = process.env.PORT || 8080;
-
-server.listen(port, () => {
-  console.log("Server running on port : " + port );
+sequelize.sync({ force: false }).then(() => {
+  app.listen(PORT, () => console.log('Now listening'));
 });
