@@ -3,7 +3,7 @@ const sequelize = require('../config/connection');
 
 class Post extends Model {}
 
-Project.init(
+Post.init(
     {
         id: {
             type: DataTypes.INTEGER,
@@ -16,7 +16,7 @@ Project.init(
             allowNull: false,
         },
         contents: {
-            type: DataTypes.STRING,
+            type: DataTypes.STRING(1000),
         },
         date_created: {
             type: DataTypes.DATE,
